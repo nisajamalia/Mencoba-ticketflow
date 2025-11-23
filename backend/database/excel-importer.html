@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Excel Data Importer - Ticketing System</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f8fafc;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #2b6cb0;
+        margin-bottom: 10px;
+      }
+      .button {
+        background: #3182ce;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 10px 5px;
+      }
+      .button:hover {
+        background: #2c5282;
+      }
+      .button:disabled {
+        background: #a0aec0;
+        cursor: not-allowed;
+      }
+      .status {
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        font-weight: 500;
+      }
+      .status.success {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+      .status.error {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+      .status.info {
+        background: #bee3f8;
+        color: #2c5282;
+      }
+      .progress {
+        background: #e2e8f0;
+        height: 30px;
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 20px 0;
+      }
+      .progress-bar {
+        background: #48bb78;
+        height: 100%;
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+      }
+      .log {
+        background: #1a202c;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 Excel Data Importer</h1>
+      <p style="color: #718096; margin-bottom: 30px">
+        Import 100 tickets from your Excel file into the database
+      </p>
+
+      <div id="status"></div>
+
+      <div class="progress" id="progressContainer" style="display: none">
+        <div class="progress-bar" id="progressBar">0%</div>
+      </div>
+
+      <button class="button" id="importBtn" onclick="startImport()">
+        🚀 Import 100 Tickets from Excel
+      </button>
+
+      <button
+        class="button"
+        id="checkBtn"
+        onclick="checkStatus()"
+        style="background: #805ad5"
+      >
+        📊 Check Current Status
+      </button>
+
+      <div id="log" class="log" style="display: none"></div>
+    </div>
+
+    <script>
+      async function startImport() {
+        const btn = document.getElementById("importBtn");
+        const progressContainer = document.getElementById("progressContainer");
+        const progressBar = document.getElementById("progressBar");
+        const log = document.getElementById("log");
+
+        btn.disabled = true;
+        progressContainer.style.display = "block";
+        log.style.display = "block";
+        log.textContent = "Starting import...\n";
+
+        try {
+          const response = await fetch("excel-importer-api.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "import" }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            progressBar.style.width = "100%";
+            progressBar.textContent = "100%";
+            showStatus("✅ Successfully imported 100 tickets!", "success");
+            log.textContent += "\n" + data.log;
+          } else {
+            showStatus("❌ Error: " + data.message, "error");
+            log.textContent += "\nError: " + data.message;
+          }
+        } catch (error) {
+          showStatus("❌ Connection error: " + error.message, "error");
+          log.textContent += "\nConnection error: " + error.message;
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function checkStatus() {
+        showStatus("📊 Checking database status...", "info");
+
+        try {
+          const response = await fetch("excel-importer-api.php?action=status");
+          const data = await response.json();
+
+          if (data.success) {
+            showStatus(
+              `Current Database Status:\n` +
+                `👥 Users: ${data.users}\n` +
+                `🎫 Tickets: ${data.tickets}\n` +
+                `📂 Categories: ${data.categories}`,
+              "success"
+            );
+          }
+        } catch (error) {
+          showStatus("❌ Error: " + error.message, "error");
+        }
+      }
+
+      function showStatus(message, type) {
+        const statusDiv = document.getElementById("status");
+        statusDiv.innerHTML = `<div class="status ${type}">${message.replace(
+          /\n/g,
+          "<br>"
+        )}</div>`;
+      }
+
+      // Check status on load
+      window.addEventListener("DOMContentLoaded", checkStatus);
+    </script>
+  </body>
+</html>

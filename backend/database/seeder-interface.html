@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Database Seeder - Ticketing System</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f8fafc;
+        color: #2d3748;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #2b6cb0;
+        margin-bottom: 10px;
+      }
+      .subtitle {
+        color: #718096;
+        margin-bottom: 30px;
+      }
+      .section {
+        margin-bottom: 25px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f7fafc;
+      }
+      .section h3 {
+        margin-top: 0;
+        color: #2d3748;
+      }
+      .button {
+        background: #3182ce;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        transition: background 0.2s;
+      }
+      .button:hover {
+        background: #2c5282;
+      }
+      .button.danger {
+        background: #e53e3e;
+      }
+      .button.danger:hover {
+        background: #c53030;
+      }
+      .output {
+        background: #1a202c;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 15px;
+        display: none;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 6px;
+        margin: 10px 0;
+      }
+      .status.success {
+        background: #c6f6d5;
+        color: #22543d;
+        border: 1px solid #9ae6b4;
+      }
+      .status.error {
+        background: #fed7d7;
+        color: #742a2a;
+        border: 1px solid #feb2b2;
+      }
+      .current-data {
+        background: #ebf8ff;
+        border: 1px solid #90cdf4;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
+      .data-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid #bee3f8;
+      }
+      .data-item:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌱 Database Seeder</h1>
+      <p class="subtitle">Manage sample data for your Ticketing System</p>
+
+      <div id="status"></div>
+
+      <div class="current-data">
+        <h3>📊 Current Database Status</h3>
+        <div id="dataStatus">Loading...</div>
+      </div>
+
+      <div class="section">
+        <h3>🚀 Quick Actions</h3>
+        <button class="button" onclick="seedDatabase()">
+          Seed Sample Data
+        </button>
+        <button class="button danger" onclick="clearDatabase()">
+          Clear All Data
+        </button>
+        <button class="button" onclick="checkStatus()">Refresh Status</button>
+      </div>
+
+      <div class="section">
+        <h3>📋 What will be created:</h3>
+        <ul>
+          <li><strong>5 Users:</strong> 1 admin, 2 agents, 2 customers</li>
+          <li>
+            <strong>6 Categories:</strong> Technical Support, Feature Request,
+            General Inquiry, Billing, Bug Report, Account
+          </li>
+          <li>
+            <strong>8 Sample Tickets:</strong> Various priorities and statuses
+          </li>
+          <li><strong>8 Comments:</strong> Including internal notes</li>
+          <li><strong>7 Audit Logs:</strong> Change tracking examples</li>
+        </ul>
+        <p>
+          <strong>Default Password:</strong> <code>password</code> for all users
+        </p>
+      </div>
+
+      <div id="output" class="output"></div>
+    </div>
+
+    <script>
+      async function checkStatus() {
+        showOutput("Checking database status...");
+
+        try {
+          const response = await fetch("seeder-api.php?action=status");
+          const data = await response.json();
+
+          if (data.success) {
+            updateDataStatus(data.data);
+            showStatus("Database status updated", "success");
+          } else {
+            showStatus("Error: " + data.message, "error");
+          }
+        } catch (error) {
+          showStatus("Connection error: " + error.message, "error");
+        }
+      }
+
+      async function seedDatabase() {
+        if (
+          !confirm(
+            "This will clear existing data and create new sample data. Continue?"
+          )
+        ) {
+          return;
+        }
+
+        showOutput("Starting database seeding...\n");
+        showStatus("Seeding in progress...", "success");
+
+        try {
+          const response = await fetch("seeder-api.php?action=seed", {
+            method: "POST",
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            appendOutput(data.output);
+            showStatus("Database seeded successfully!", "success");
+            checkStatus(); // Refresh status
+          } else {
+            showStatus("Error: " + data.message, "error");
+            appendOutput("Error: " + data.message);
+          }
+        } catch (error) {
+          showStatus("Connection error: " + error.message, "error");
+          appendOutput("Connection error: " + error.message);
+        }
+      }
+
+      async function clearDatabase() {
+        if (!confirm("This will permanently delete all data. Are you sure?")) {
+          return;
+        }
+
+        showOutput("Clearing database...\n");
+
+        try {
+          const response = await fetch("seeder-api.php?action=clear", {
+            method: "POST",
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            appendOutput(data.output);
+            showStatus("Database cleared successfully!", "success");
+            checkStatus(); // Refresh status
+          } else {
+            showStatus("Error: " + data.message, "error");
+          }
+        } catch (error) {
+          showStatus("Connection error: " + error.message, "error");
+        }
+      }
+
+      function showStatus(message, type) {
+        const statusDiv = document.getElementById("status");
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+
+      function showOutput(text) {
+        const outputDiv = document.getElementById("output");
+        outputDiv.textContent = text;
+        outputDiv.style.display = "block";
+      }
+
+      function appendOutput(text) {
+        const outputDiv = document.getElementById("output");
+        outputDiv.textContent += text + "\n";
+        outputDiv.scrollTop = outputDiv.scrollHeight;
+      }
+
+      function updateDataStatus(data) {
+        const statusDiv = document.getElementById("dataStatus");
+        statusDiv.innerHTML = `
+                <div class="data-item"><span>Users:</span><span>${data.users} records</span></div>
+                <div class="data-item"><span>Categories:</span><span>${data.categories} records</span></div>
+                <div class="data-item"><span>Tickets:</span><span>${data.tickets} records</span></div>
+                <div class="data-item"><span>Comments:</span><span>${data.comments} records</span></div>
+                <div class="data-item"><span>Audit Logs:</span><span>${data.audit_logs} records</span></div>
+            `;
+      }
+
+      // Load status on page load
+      document.addEventListener("DOMContentLoaded", checkStatus);
+    </script>
+  </body>
+</html>
