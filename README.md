@@ -1,27 +1,27 @@
-# Ticketing System - Complete Setup Guide
+# TicketFlow - Support Ticketing System
 
-A modern, full-featured ticketing system built with Laravel 11 backend API and Vue.js 3 frontend.
+A modern, full-featured ticketing system built with Vue.js 3 frontend and Laravel 11 backend with MySQL database.
 
 ## 🚀 Features
-
-### Authentication & Authorization
-
-- ✅ User registration and login
-- ✅ JWT token-based authentication
-- ✅ Role-based access control (Admin/User)
-- ✅ Password reset functionality
-- ✅ Profile management
 
 ### Ticketing System
 
 - ✅ Create, read, update, delete tickets
 - ✅ Ticket categories and priorities
 - ✅ Status tracking (Open, In Progress, Resolved, Closed)
-- ✅ File attachments support
 - ✅ Comments system
 - ✅ Activity logging
-- ✅ Ticket assignment (Admin only)
+- ✅ Ticket assignment
 - ✅ Advanced filtering and search
+- ✅ Server-side pagination
+- ✅ Archive/Unarchive functionality
+- ✅ Real-time dashboard statistics
+
+### User Management
+
+- ✅ User authentication (login/logout)
+- ✅ Role-based access control (Admin/Agent/User)
+- ✅ Profile management
 
 ### Admin Features
 
@@ -35,20 +35,18 @@ A modern, full-featured ticketing system built with Laravel 11 backend API and V
 - ✅ Modern, responsive design with TailwindCSS
 - ✅ Vue.js 3 with Composition API
 - ✅ Pinia state management
-- ✅ Toast notifications
-- ✅ Loading states and error handling
 - ✅ Mobile-friendly interface
+- ✅ Clean, professional design
 
 ## 📋 Prerequisites
 
-Before you begin, ensure you have the following installed on your system:
+Before you begin, ensure you have the following installed:
 
 ### Backend Requirements
 
-- **PHP 8.2 or higher**
-- **Composer** (PHP package manager)
-- **MySQL 8.0** or **PostgreSQL 13+**
-- **Node.js 18+** and **npm** (for asset compilation)
+- **PHP 8.0 or higher**
+- **MySQL 8.0** or **MariaDB 10.3+**
+- **Apache** or **Nginx** web server (XAMPP/WAMP recommended for Windows)
 
 ### Frontend Requirements
 
@@ -57,275 +55,245 @@ Before you begin, ensure you have the following installed on your system:
 
 ## 🛠️ Installation Instructions
 
-### Step 1: Clone and Setup Backend (Laravel)
+### Step 1: Clone the Repository
 
-1. **Navigate to the backend directory:**
+```bash
+git clone https://github.com/ezrelafidelynn/TicketFlow.git
+cd TicketFlow
+```
+
+### Step 2: Setup Database
+
+1. **Start your MySQL server** (via XAMPP, WAMP, or standalone MySQL)
+
+2. **Create the database:**
+
+   ```sql
+   CREATE DATABASE ticketing_system;
+   ```
+
+3. **Import the database schema:**
+
+   Navigate to `backend/database/` and run:
+
+   ```bash
+   mysql -u root -p ticketing_system < schema.sql
+   ```
+
+### Step 3: Configure Laravel Backend
+
+1. **Navigate to backend directory:**
 
    ```bash
    cd backend
    ```
 
-2. **Install PHP dependencies:**
+2. **Install Composer dependencies:**
 
    ```bash
-   composer install
+   php composer.phar install
    ```
 
-3. **Create environment file:**
+   If you don't have Composer, download it from https://getcomposer.org/
 
-   ```bash
-   copy .env.example .env
-   ```
+3. **Configure environment:**
 
-4. **Configure your database in `.env`:**
+   The `.env` file should already be present. Update if needed:
 
    ```env
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
    DB_DATABASE=ticketing_system
-   DB_USERNAME=your_username
-   DB_PASSWORD=your_password
+   DB_USERNAME=root
+   DB_PASSWORD=
    ```
 
-5. **Generate application key:**
+4. **Generate application key** (if not set):
 
    ```bash
    php artisan key:generate
    ```
 
-6. **Create database:**
-   Create a new MySQL database named `ticketing_system`
-
-7. **Run migrations and seeders:**
+5. **Start Laravel development server:**
 
    ```bash
-   php artisan migrate --seed
+   php artisan serve --host=0.0.0.0 --port=8000
    ```
 
-8. **Create storage symlink:**
+   The Laravel API will be available at: `http://localhost:8000`
 
-   ```bash
-   php artisan storage:link
-   ```
+### Step 4: Setup Vue.js Frontend
 
-9. **Install and compile assets (optional):**
-
-   ```bash
-   npm install
-   npm run build
-   ```
-
-10. **Start the development server:**
-
-    ```bash
-    php artisan serve
-    ```
-
-    The API will be available at `http://localhost:8000`
-
-### Step 2: Setup Frontend (Vue.js)
-
-1. **Navigate to the frontend directory:**
+1. **Open a new terminal and navigate to frontend directory:**
 
    ```bash
    cd frontend
    ```
 
-2. **Install Node.js dependencies:**
+2. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-3. **Create environment file (optional):**
+3. **API Configuration:**
 
-   ```bash
-   copy .env.example .env
-   ```
+   The API endpoint is already configured to use Laravel at `http://localhost:8000/api`
 
-   Add the following to `.env`:
+   Located in `frontend/src/services/api.js`
 
-   ```env
-   VITE_API_URL=http://localhost:8000/api
-   ```
-
-4. **Start the development server:**
+4. **Start development server:**
 
    ```bash
    npm run dev
    ```
 
-   The frontend will be available at `http://localhost:3000`
+5. **Access the application:**
 
-## 🔑 Default Login Credentials
+   Open your browser and visit:
 
-After running the seeders, you can use these default accounts:
+   ```
+   http://localhost:5173
+   ```
+
+## 👤 Default Users
+
+After running the seeder, you can login with:
 
 ### Admin Account
 
-- **Email:** admin@ticketing.com
-- **Password:** password
+- Email: `admin@ticket.com`
+- Password: `admin123`
 
-### Regular User Account
+### Agent Account
 
-- **Email:** john@example.com
-- **Password:** password
+- Email: `agent@ticket.com`
+- Password: `agent123`
 
-### Support Staff Account
+### Customer Account
 
-- **Email:** support@ticketing.com
-- **Password:** password
-
-## 🗄️ Database Schema
-
-The system includes the following main tables:
-
-- **users** - User accounts with roles
-- **categories** - Ticket categories
-- **tickets** - Support tickets
-- **comments** - Ticket comments
-- **activity_logs** - Ticket activity tracking
-- **personal_access_tokens** - Sanctum authentication tokens
-
-## 🔧 Configuration
-
-### Backend Configuration
-
-#### CORS Settings
-
-The backend is configured to accept requests from `http://localhost:3000` by default. Update `config/cors.php` if needed.
-
-#### File Upload Settings
-
-- Maximum file size: 10MB per file
-- Allowed file types: All (configurable in form requests)
-- Storage: `storage/app/public/attachments`
-
-#### API Rate Limiting
-
-Default rate limiting is applied to API routes. Modify in `bootstrap/app.php` if needed.
-
-### Frontend Configuration
-
-#### API Integration
-
-The frontend is configured to connect to the Laravel API at `http://localhost:8000/api`. This can be changed in:
-
-- `src/services/api.js`
-- `.env` file (`VITE_API_URL`)
-
-#### Authentication
-
-- JWT tokens are stored in localStorage
-- Automatic token refresh on API calls
-- Route guards for protected pages
+- Email: `customer@ticket.com`
+- Password: `customer123`
 
 ## 📁 Project Structure
 
-### Backend Structure
-
 ```
-backend/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/Api/     # API Controllers
-│   │   ├── Requests/           # Form Validation
-│   │   └── Resources/          # API Resources
-│   ├── Models/                 # Eloquent Models
-│   └── Services/              # Business Logic
-├── database/
-│   ├── migrations/            # Database Migrations
-│   └── seeders/              # Data Seeders
-├── routes/
-│   ├── api.php               # API Routes
-│   └── web.php               # Web Routes
-└── storage/                  # File Storage
-```
-
-### Frontend Structure
-
-```
-frontend/
-├── src/
-│   ├── components/           # Reusable Components
-│   ├── layouts/             # Layout Components
-│   ├── pages/               # Page Components
-│   ├── router/              # Vue Router Configuration
-│   ├── services/            # API Services
-│   ├── stores/              # Pinia Stores
-│   └── styles/              # CSS Styles
-├── public/                  # Static Assets
-└── index.html              # Entry HTML
+TicketFlow/
+├── backend/
+│   ├── api/              # REST API endpoints
+│   │   ├── tickets.php   # Tickets CRUD operations
+│   │   └── stats.php     # Dashboard statistics
+│   ├── config/           # Configuration files
+│   │   └── database.php  # Database connection
+│   └── database/         # Database files
+│       ├── schema.sql    # Database structure
+│       ├── seeder.php    # Sample data seeder
+│       └── migrations/   # SQL migration files
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Reusable Vue components
+│   │   ├── layouts/      # Layout components
+│   │   ├── pages/        # Page components
+│   │   ├── router/       # Vue Router configuration
+│   │   ├── stores/       # Pinia state management
+│   │   └── services/     # API service layer
+│   ├── package.json      # Node dependencies
+│   └── vite.config.js    # Vite configuration
+└── README.md             # This file
 ```
 
-## 🚀 Deployment
+```bash
+php artisan migrate --seed
+```
 
-### Production Backend Deployment
+8. **Create storage symlink:**
 
-1. **Server Requirements:**
+## 🔧 API Endpoints
 
-   - PHP 8.2+
-   - MySQL/PostgreSQL
-   - Web server (Apache/Nginx)
-   - SSL certificate
+### Tickets API
 
-2. **Environment Setup:**
+- `GET /api/tickets.php` - List tickets (supports pagination, filters, sorting, archive)
+  - Query params: `page`, `limit`, `orderBy`, `search`, `status`, `priority`, `category`, `archived`
+- `GET /api/tickets.php?id={id}` - Get ticket details
+- `POST /api/tickets.php` - Create ticket
+- `PUT /api/tickets.php?id={id}` - Update ticket
+- `PUT /api/tickets.php?id={id}&action=archive` - Archive ticket
+- `PUT /api/tickets.php?id={id}&action=unarchive` - Unarchive ticket
+- `DELETE /api/tickets.php?id={id}` - Delete ticket
 
-   ```bash
-   composer install --optimize-autoloader --no-dev
-   php artisan config:cache
-   php artisan route:cache
-   php artisan view:cache
-   ```
+### Statistics API
 
-3. **Database:**
-   ```bash
-   php artisan migrate --force
-   ```
+- `GET /api/stats.php` - Get dashboard statistics (total, resolved, in-progress, high priority)
 
-### Production Frontend Deployment
+## 🛠️ Development
 
-1. **Build for production:**
+### Running in Development
 
-   ```bash
-   npm run build
-   ```
+**Backend (via XAMPP/WAMP):**
 
-2. **Deploy the `dist` folder to your web server**
+- Start Apache and MySQL
+- Access via `http://localhost/TicketFlow/backend/api/`
 
-3. **Configure web server to serve SPA routes**
+**Frontend:**
 
-## 🔍 API Documentation
+```bash
+cd frontend
+npm run dev
+```
 
-### Authentication Endpoints
+Access at `http://localhost:5173`
 
-- `POST /api/register` - User registration
-- `POST /api/login` - User login
-- `POST /api/logout` - User logout
-- `GET /api/user` - Get authenticated user
-- `PUT /api/profile` - Update user profile
+### Building for Production
 
-### Ticket Endpoints
+**Frontend:**
 
-- `GET /api/tickets` - List tickets (with filters)
-- `POST /api/tickets` - Create ticket
-- `GET /api/tickets/{id}` - Get ticket details
-- `PUT /api/tickets/{id}` - Update ticket
-- `DELETE /api/tickets/{id}` - Delete ticket
-- `PUT /api/tickets/{id}/assign` - Assign ticket (Admin)
+```bash
+cd frontend
+npm run build
+```
 
-### Category Endpoints
+The production files will be in `frontend/dist/`
 
-- `GET /api/categories` - List categories
-- `POST /api/categories` - Create category (Admin)
-- `PUT /api/categories/{id}` - Update category (Admin)
-- `DELETE /api/categories/{id}` - Delete category (Admin)
+## 🐛 Troubleshooting
 
-### Comment Endpoints
+### Common Issues
 
-- `GET /api/tickets/{id}/comments` - List ticket comments
-- `POST /api/tickets/{id}/comments` - Add comment
+**1. CORS errors:**
+
+- Check that `Access-Control-Allow-Origin` header is set in backend API files
+- Ensure frontend is accessing the correct backend URL
+
+**2. Database connection failed:**
+
+- Verify MySQL is running
+- Check database credentials in `backend/config/database.php`
+- Ensure database `ticketing_system` exists
+
+**3. Frontend can't connect to backend:**
+
+- Check API URLs in frontend code match your backend location
+- Verify Apache/web server is running
+- Check browser console for specific errors
+
+**4. "No data" or empty tables:**
+
+- Run the database seeder: `http://localhost/TicketFlow/backend/database/seeder.php`
+- Check that SQL files were imported correctly
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+## 👥 Contributors
+
+- Ezrela Fidelynn - Initial work
+
+## 🙏 Acknowledgments
+
+- Vue.js for the frontend framework
+- TailwindCSS for styling
+- Heroicons for icon set
 - `PUT /api/comments/{id}` - Update comment
 - `DELETE /api/comments/{id}` - Delete comment
 

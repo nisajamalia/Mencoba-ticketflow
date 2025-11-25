@@ -2,10 +2,8 @@ import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "http://localhost/ticketing-website/backend/api",
-  withCredentials: false, // PHP API doesn't use credentials
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
