@@ -209,6 +209,7 @@ class DatabaseSeeder {
         $stmt = $this->conn->prepare($query);
         
         foreach ($tickets as $ticket) {
+
             $stmt->execute([
                 $ticket['title'],
                 $ticket['description'],
