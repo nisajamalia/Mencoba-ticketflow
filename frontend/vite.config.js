@@ -10,6 +10,20 @@ export default defineConfig({
       "@": resolve(__dirname, "src"),
     },
   },
+  build: {
+    outDir: "../dist",
+    emptyOutDir: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["vue", "vue-router", "pinia"],
+          ui: ["@headlessui/vue", "@heroicons/vue", "vue-toastification"],
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     strictPort: true,
