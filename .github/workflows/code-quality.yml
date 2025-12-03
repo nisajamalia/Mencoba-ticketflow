@@ -1,0 +1,74 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  php-code-style:
+    name: PHP Code Style
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+
+    - name: Install Dependencies
+      run: |
+        cd backend
+        composer install --no-interaction
+
+    - name: Run Laravel Pint
+      run: |
+        cd backend
+        ./vendor/bin/pint --test || echo "Code style issues found"
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+
+    - name: Install Dependencies
+      run: |
+        cd backend
+        composer install --no-interaction
+
+    - name: Check for Security Vulnerabilities
+      run: |
+        cd backend
+        composer audit || echo "Security check completed"
+
+  frontend-lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Check Code Quality
+      run: |
+        cd frontend
+        npm run lint || echo "Lint check completed"

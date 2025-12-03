@@ -1,0 +1,70 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    name: Backend CI
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, json, sqlite3
+
+    - name: Install Dependencies
+      run: |
+        cd backend
+        composer install --no-interaction --prefer-dist
+
+    - name: Setup Environment
+      run: |
+        cd backend
+        cp .env.example .env
+        echo "DB_CONNECTION=sqlite" >> .env
+        php artisan key:generate
+
+    - name: Run Migrations
+      run: |
+        cd backend
+        touch database/database.sqlite
+        php artisan migrate --force
+
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist
+        retention-days: 7
