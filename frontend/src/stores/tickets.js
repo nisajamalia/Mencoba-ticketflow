@@ -71,13 +71,15 @@ export const useTicketStore = defineStore("tickets", {
       this.error = null;
 
       try {
-        // Fetch tickets from Laravel API
-        const response = await fetch("http://localhost:8000/api/tickets");
+        // Fetch tickets from PHP API
+        const response = await fetch(
+          "http://localhost/ticketing-website/backend/api/tickets.php"
+        );
         const result = await response.json();
 
         if (result.success) {
           // Transform the data to match frontend expectations
-          this.tickets = result.tickets.map((ticket) => ({
+          this.tickets = result.data.map((ticket) => ({
             id: ticket.id,
             title: ticket.title,
             description: ticket.description,
@@ -339,12 +341,18 @@ export const useTicketStore = defineStore("tickets", {
 
     async fetchTicketStats() {
       try {
-        // Fetch stats from Laravel API
-        const response = await fetch("http://localhost:8000/api/stats");
-        const stats = await response.json();
+        // Fetch stats from PHP API
+        const response = await fetch(
+          "http://localhost/ticketing-website/backend/api/stats.php"
+        );
+        const result = await response.json();
 
-        this.stats = stats;
-        return { data: stats };
+        if (result.success) {
+          this.stats = result.data;
+          return { data: result.data };
+        } else {
+          throw new Error(result.message || "Failed to fetch stats");
+        }
       } catch (error) {
         console.error("Failed to fetch ticket stats:", error);
         // Return default stats on error

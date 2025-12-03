@@ -1,0 +1,30 @@
+{
+  "name": "ticketing-system",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "mysql2": "^3.6.5"
+  },
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd frontend && npm run preview",
+    "install-frontend": "cd frontend && npm install",
+    "setup-db": "node scripts/setup-database.js",
+    "seed-db": "node scripts/seed-database.js",
+    "deploy": "node scripts/deploy.js",
+    "quick-deploy": "npm run setup-db && npm run seed-db && vercel --prod"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ticketing",
+    "vercel",
+    "mysql",
+    "vue",
+    "serverless"
+  ],
+  "author": "",
+  "license": "ISC"
+}
