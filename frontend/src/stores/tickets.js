@@ -71,15 +71,11 @@ export const useTicketStore = defineStore("tickets", {
       this.error = null;
 
       try {
-        // Fetch tickets from PHP API
-        const response = await fetch(
-          "http://localhost/ticketing-website/backend/api/tickets.php"
-        );
-        const result = await response.json();
+        const response = await ticketService.getTickets(params);
 
-        if (result.success) {
+        if (response.success) {
           // Transform the data to match frontend expectations
-          this.tickets = result.data.map((ticket) => ({
+          this.tickets = response.tickets.map((ticket) => ({
             id: ticket.id,
             title: ticket.title,
             description: ticket.description,
@@ -94,14 +90,14 @@ export const useTicketStore = defineStore("tickets", {
           }));
 
           this.initialized = true;
-          this.saveTicketsToStorage(); // Also save to localStorage as backup
+          this.saveTicketsToStorage();
 
-          // Update pagination
+          // Update pagination from response
           this.pagination = {
-            current_page: 1,
-            last_page: 1,
-            per_page: params.per_page || 15,
-            total: this.tickets.length,
+            current_page: response.pagination?.page || 1,
+            last_page: response.pagination?.total_pages || 1,
+            per_page: response.pagination?.per_page || 15,
+            total: response.pagination?.total || this.tickets.length,
           };
 
           console.log(
@@ -110,7 +106,7 @@ export const useTicketStore = defineStore("tickets", {
           );
           return { data: this.tickets, meta: this.pagination };
         } else {
-          throw new Error(result.message || "Failed to fetch tickets");
+          throw new Error(response.message || "Failed to fetch tickets");
         }
       } catch (error) {
         console.error("API fetch failed, using localStorage fallback:", error);
@@ -341,18 +337,9 @@ export const useTicketStore = defineStore("tickets", {
 
     async fetchTicketStats() {
       try {
-        // Fetch stats from PHP API
-        const response = await fetch(
-          "http://localhost/ticketing-website/backend/api/stats.php"
-        );
-        const result = await response.json();
-
-        if (result.success) {
-          this.stats = result.data;
-          return { data: result.data };
-        } else {
-          throw new Error(result.message || "Failed to fetch stats");
-        }
+        const response = await ticketService.getTicketStats();
+        this.stats = response.data;
+        return response;
       } catch (error) {
         console.error("Failed to fetch ticket stats:", error);
         // Return default stats on error

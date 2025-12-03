@@ -242,6 +242,7 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { ticketService } from "@/services";
 
 export default {
   name: "ArchivedTicketsPage",
@@ -279,26 +280,27 @@ export default {
 
     const loadTickets = async () => {
       try {
-        const queryParams = `page=${currentPage.value}&limit=${itemsPerPage.value}&archived=true`;
+        const params = {
+          page: currentPage.value,
+          limit: itemsPerPage.value,
+          archived: '1'
+        };
 
-        const response = await fetch(
-          `http://localhost/ticketing-website/backend/api/tickets.php?${queryParams}`
-        );
-        const result = await response.json();
+        const response = await ticketService.getTickets(params);
 
-        if (result.success) {
-          tickets.value = result.data.map((ticket) => ({
+        if (response.success) {
+          tickets.value = response.tickets.map((ticket) => ({
             id: ticket.id,
             title: ticket.title,
             description: ticket.description,
             status: ticket.status,
             priority: ticket.priority,
             category: ticket.category_name,
-            user: ticket.created_by_name,
+            user: ticket.created_by_name || 'Unknown',
             created_at: ticket.created_at,
           }));
 
-          pagination.value = result.pagination;
+          pagination.value = response.pagination;
         }
       } catch (error) {
         console.error("Failed to load archived tickets:", error);
@@ -319,22 +321,13 @@ export default {
     const unarchiveTicket = async (ticketId) => {
       if (confirm(`Are you sure you want to unarchive ticket #${ticketId}?`)) {
         try {
-          const response = await fetch(
-            `http://localhost/ticketing-website/backend/api/tickets.php?id=${ticketId}&action=unarchive`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          const result = await response.json();
+          const response = await ticketService.updateTicket(ticketId, { archived: false });
 
-          if (result.success) {
+          if (response.success) {
             alert("Ticket unarchived successfully!");
             loadTickets();
           } else {
-            alert("Failed to unarchive ticket: " + result.message);
+            alert("Failed to unarchive ticket: " + response.message);
           }
         } catch (error) {
           console.error("Unarchive failed:", error);
