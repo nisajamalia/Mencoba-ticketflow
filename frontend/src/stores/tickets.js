@@ -71,15 +71,11 @@ export const useTicketStore = defineStore("tickets", {
       this.error = null;
 
       try {
-        // Fetch tickets from PHP API
-        const response = await fetch(
-          "http://localhost/ticketing-website/backend/api/tickets.php"
-        );
-        const result = await response.json();
+        const response = await ticketService.getTickets(params);
 
-        if (result.success) {
+        if (response.success) {
           // Transform the data to match frontend expectations
-          this.tickets = result.data.map((ticket) => ({
+          this.tickets = response.tickets.map((ticket) => ({
             id: ticket.id,
             title: ticket.title,
             description: ticket.description,
@@ -94,14 +90,14 @@ export const useTicketStore = defineStore("tickets", {
           }));
 
           this.initialized = true;
-          this.saveTicketsToStorage(); // Also save to localStorage as backup
+          this.saveTicketsToStorage();
 
-          // Update pagination
+          // Update pagination from response
           this.pagination = {
-            current_page: 1,
-            last_page: 1,
-            per_page: params.per_page || 15,
-            total: this.tickets.length,
+            current_page: response.pagination?.page || 1,
+            last_page: response.pagination?.total_pages || 1,
+            per_page: response.pagination?.per_page || 15,
+            total: response.pagination?.total || this.tickets.length,
           };
 
           console.log(
@@ -110,7 +106,7 @@ export const useTicketStore = defineStore("tickets", {
           );
           return { data: this.tickets, meta: this.pagination };
         } else {
-          throw new Error(result.message || "Failed to fetch tickets");
+          throw new Error(response.message || "Failed to fetch tickets");
         }
       } catch (error) {
         console.error("API fetch failed, using localStorage fallback:", error);
@@ -184,44 +180,16 @@ export const useTicketStore = defineStore("tickets", {
       this.error = null;
 
       try {
-        // Mock categories for lookup
-        const categories = [
-          { id: 1, name: "Technical Support" },
-          { id: 2, name: "Billing" },
-          { id: 3, name: "General Inquiry" },
-          { id: 4, name: "Bug Report" },
-          { id: 5, name: "Feature Request" },
-        ];
+        const response = await ticketService.createTicket(ticketData);
 
-        const selectedCategory = categories.find(
-          (cat) => cat.id == ticketData.category_id
-        );
-
-        // Mock ticket creation
-        const newTicket = {
-          id: Date.now(), // Simple ID generation
-          title: ticketData.title,
-          description: ticketData.description,
-          status: "open",
-          priority: ticketData.priority || "medium",
-          category: selectedCategory
-            ? selectedCategory.name
-            : "General Inquiry",
-          category_id: parseInt(ticketData.category_id) || 3,
-          user: "Current User",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        this.tickets.unshift(newTicket);
-        // Update pagination
-        this.pagination.total = this.tickets.length;
-        this.saveTicketsToStorage(); // Save to localStorage
-        toast.success("Ticket created successfully!");
-        return { data: newTicket };
+        if (response.success) {
+          // Refresh tickets list to include the new ticket
+          await this.fetchTickets();
+          toast.success("Ticket created successfully!");
+          return response;
+        } else {
+          throw new Error(response.message || "Failed to create ticket");
+        }
       } catch (error) {
         this.error = "Failed to create ticket";
         toast.error(this.error);
@@ -236,50 +204,29 @@ export const useTicketStore = defineStore("tickets", {
       this.error = null;
 
       try {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 400));
+        const response = await ticketService.updateTicket(id, ticketData);
 
-        const parsedId = parseInt(id);
-        const updateData = {
-          ...ticketData,
-          updated_at: new Date().toISOString(),
-        };
+        if (response.success) {
+          // Update in local tickets array
+          const index = this.tickets.findIndex((t) => t.id === parseInt(id));
+          if (index !== -1) {
+            // Refresh the ticket data from server
+            await this.fetchTickets();
+          }
 
-        // Update in tickets array
-        const index = this.tickets.findIndex((t) => t.id === parsedId);
-        if (index !== -1) {
-          this.tickets[index] = {
-            ...this.tickets[index],
-            ...updateData,
-          };
+          // Update current ticket if it's the same
+          if (this.currentTicket?.id === parseInt(id)) {
+            this.currentTicket = {
+              ...this.currentTicket,
+              ...ticketData,
+            };
+          }
 
-          console.log("Ticket updated in store:", this.tickets[index]);
+          toast.success("Ticket updated successfully!");
+          return response;
         } else {
-          // If ticket not found in array, create it
-          const newTicket = {
-            id: parsedId,
-            user: "Current User",
-            created_at: new Date().toISOString(),
-            ...updateData,
-          };
-          this.tickets.unshift(newTicket);
-          console.log("New ticket created in store:", newTicket);
+          throw new Error(response.message || "Failed to update ticket");
         }
-
-        // Update current ticket if it's the same
-        if (this.currentTicket?.id === parsedId) {
-          this.currentTicket = {
-            ...this.currentTicket,
-            ...updateData,
-          };
-        }
-
-        // Update pagination
-        this.pagination.total = this.tickets.length;
-        this.saveTicketsToStorage(); // Save to localStorage
-        toast.success("Ticket updated successfully!");
-        const updatedTicket = this.tickets.find((t) => t.id === parsedId);
-        return { data: updatedTicket };
       } catch (error) {
         this.error = "Failed to update ticket";
         toast.error(this.error);
@@ -291,43 +238,28 @@ export const useTicketStore = defineStore("tickets", {
     },
 
     async deleteTicket(id) {
-      console.log("Store deleteTicket called with ID:", id);
       this.loading = true;
       this.error = null;
 
       try {
-        const parsedId = parseInt(id);
-        console.log("Parsed ID:", parsedId);
-        console.log("Tickets before delete:", this.tickets.length);
+        const response = await ticketService.deleteTicket(id);
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        if (response.success) {
+          // Remove from local tickets array
+          this.tickets = this.tickets.filter((t) => t.id !== parseInt(id));
 
-        // Remove from tickets array
-        const originalLength = this.tickets.length;
-        this.tickets = this.tickets.filter((t) => t.id !== parsedId);
-        console.log("Tickets after delete:", this.tickets.length);
-        console.log(
-          "Deleted tickets count:",
-          originalLength - this.tickets.length
-        );
+          // Clear current ticket if it's the same
+          if (this.currentTicket?.id === parseInt(id)) {
+            this.currentTicket = null;
+          }
 
-        // Clear current ticket if it's the same
-        if (this.currentTicket?.id === parsedId) {
-          this.currentTicket = null;
-          console.log("Cleared current ticket");
-        }
-
-        // Update pagination
-        this.pagination.total = this.tickets.length;
-        this.saveTicketsToStorage(); // Save to localStorage
-        console.log("Attempting to show success toast...");
-
-        try {
+          // Update pagination
+          this.pagination.total = this.tickets.length;
+          this.saveTicketsToStorage();
           toast.success("Ticket deleted successfully!");
-          console.log("Success toast shown successfully");
-        } catch (toastError) {
-          console.error("Error showing toast:", toastError);
+          return response;
+        } else {
+          throw new Error(response.message || "Failed to delete ticket");
         }
       } catch (error) {
         this.error = "Failed to delete ticket";
@@ -341,18 +273,9 @@ export const useTicketStore = defineStore("tickets", {
 
     async fetchTicketStats() {
       try {
-        // Fetch stats from PHP API
-        const response = await fetch(
-          "http://localhost/ticketing-website/backend/api/stats.php"
-        );
-        const result = await response.json();
-
-        if (result.success) {
-          this.stats = result.data;
-          return { data: result.data };
-        } else {
-          throw new Error(result.message || "Failed to fetch stats");
-        }
+        const response = await ticketService.getTicketStats();
+        this.stats = response.data;
+        return response;
       } catch (error) {
         console.error("Failed to fetch ticket stats:", error);
         // Return default stats on error

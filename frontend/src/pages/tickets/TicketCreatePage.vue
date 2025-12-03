@@ -182,14 +182,21 @@ export default {
     });
 
     const loadCategories = async () => {
-      // Mock data for demo
-      categories.value = [
-        { id: 1, name: "Technical Support" },
-        { id: 2, name: "Billing" },
-        { id: 3, name: "General Inquiry" },
-        { id: 4, name: "Bug Report" },
-        { id: 5, name: "Feature Request" },
-      ];
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        categories.value = data;
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        // Fallback to mock data
+        categories.value = [
+          { id: 1, name: "Technical Support" },
+          { id: 2, name: "Billing" },
+          { id: 3, name: "General Inquiry" },
+          { id: 4, name: "Bug Report" },
+          { id: 5, name: "Feature Request" },
+        ];
+      }
     };
 
     const createTicket = async () => {

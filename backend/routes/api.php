@@ -34,7 +34,7 @@ Route::get('/tickets', function (Request $request) {
         ->select(
             't.id', 't.title', 't.description', 't.status', 't.priority',
             't.created_at', 't.updated_at', 't.archived',
-            'c.name as category_name', 'u.username as assigned_to_name'
+            'c.name as category_name', 'u.name as assigned_to_name'
         )
         ->where('t.archived', $showArchived ? 1 : 0);
 
@@ -75,7 +75,7 @@ Route::get('/tickets/{id}', function ($id) {
     $ticket = DB::table('tickets as t')
         ->leftJoin('categories as c', 't.category_id', '=', 'c.id')
         ->leftJoin('users as u', 't.assigned_to', '=', 'u.id')
-        ->select('t.*', 'c.name as category_name', 'u.username as assigned_to_name')
+        ->select('t.*', 'c.name as category_name', 'u.name as assigned_to_name')
         ->where('t.id', $id)
         ->first();
 
@@ -90,7 +90,6 @@ Route::post('/tickets', function (Request $request) {
     $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'required|string',
-        'status' => 'required|in:open,in-progress,resolved,closed',
         'priority' => 'required|in:low,medium,high,urgent',
         'category_id' => 'required|integer',
         'assigned_to' => 'nullable|integer'
@@ -99,9 +98,10 @@ Route::post('/tickets', function (Request $request) {
     $id = DB::table('tickets')->insertGetId([
         'title' => $request->title,
         'description' => $request->description,
-        'status' => $request->status,
+        'status' => 'open',
         'priority' => $request->priority,
         'category_id' => $request->category_id,
+        'user_id' => 1, // Default user for now (should be authenticated user)
         'assigned_to' => $request->assigned_to,
         'archived' => 0,
         'created_at' => now(),
@@ -171,6 +171,20 @@ Route::get('/stats', function () {
     ];
 
     return response()->json($stats);
+});
+
+// Alias for frontend compatibility
+Route::get('/tickets-stats', function () {
+    $stats = [
+        'total' => DB::table('tickets')->where('archived', 0)->count(),
+        'resolved' => DB::table('tickets')->where('archived', 0)->where('status', 'resolved')->count(),
+        'in_progress' => DB::table('tickets')->where('archived', 0)->where('status', 'in-progress')->count(),
+        'high_priority' => DB::table('tickets')->where('archived', 0)->whereIn('priority', ['high', 'urgent'])->count(),
+        'open' => DB::table('tickets')->where('archived', 0)->where('status', 'open')->count(),
+        'closed' => DB::table('tickets')->where('archived', 0)->where('status', 'closed')->count()
+    ];
+
+    return response()->json(['data' => $stats]);
 });
 
 // Categories endpoint

@@ -426,65 +426,27 @@ export default {
 
     const loadTickets = async () => {
       try {
-        let orderBy = "t.created_at DESC"; // Default: newest first
-
-        switch (sortBy.value) {
-          case "oldest":
-            orderBy = "t.created_at ASC";
-            break;
-          case "priority":
-            orderBy =
-              "FIELD(t.priority, 'urgent', 'high', 'medium', 'low'), t.created_at DESC";
-            break;
-          case "status":
-            orderBy = "t.status ASC, t.created_at DESC";
-            break;
-          default:
-            orderBy = "t.created_at DESC";
-        }
-
-        // Build query parameters with filters
-        let queryParams = `page=${currentPage.value}&limit=${
-          itemsPerPage.value
-        }&orderBy=${encodeURIComponent(orderBy)}`;
+        const params = {
+          page: currentPage.value,
+          limit: itemsPerPage.value,
+          sort: sortBy.value,
+        };
 
         if (filters.value.search) {
-          queryParams += `&search=${encodeURIComponent(filters.value.search)}`;
+          params.search = filters.value.search;
         }
         if (filters.value.status) {
-          queryParams += `&status=${encodeURIComponent(filters.value.status)}`;
+          params.status = filters.value.status;
         }
         if (filters.value.priority) {
-          queryParams += `&priority=${encodeURIComponent(
-            filters.value.priority
-          )}`;
+          params.priority = filters.value.priority;
         }
         if (filters.value.category) {
-          queryParams += `&category=${encodeURIComponent(
-            filters.value.category
-          )}`;
+          params.category = filters.value.category;
         }
 
-        const response = await fetch(
-          `http://localhost/ticketing-website/backend/api/tickets.php?${queryParams}`
-        );
-        const result = await response.json();
-
-        if (result.success) {
-          ticketStore.tickets = result.data.map((ticket) => ({
-            id: ticket.id,
-            title: ticket.title,
-            description: ticket.description,
-            status: ticket.status,
-            priority: ticket.priority,
-            category: ticket.category_name || "Uncategorized",
-            user: ticket.created_by_name || "Unknown",
-            created_at: ticket.created_at,
-            updated_at: ticket.updated_at,
-          }));
-
-          pagination.value = result.pagination;
-        }
+        await ticketStore.fetchTickets(params);
+        pagination.value = ticketStore.pagination;
       } catch (error) {
         console.error("Error loading tickets:", error);
       }
@@ -563,23 +525,9 @@ export default {
     const archiveTicket = async (ticketId) => {
       if (confirm(`Are you sure you want to archive ticket #${ticketId}?`)) {
         try {
-          const response = await fetch(
-            `http://localhost/ticketing-website/backend/api/tickets.php?id=${ticketId}&action=archive`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          const result = await response.json();
-
-          if (result.success) {
-            alert("Ticket archived successfully!");
-            loadTickets();
-          } else {
-            alert("Failed to archive ticket: " + result.message);
-          }
+          await ticketStore.updateTicket(ticketId, { archived: true });
+          alert("Ticket archived successfully!");
+          loadTickets();
         } catch (error) {
           console.error("Archive failed:", error);
           alert("Failed to archive ticket");
