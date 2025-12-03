@@ -90,7 +90,6 @@ Route::post('/tickets', function (Request $request) {
     $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'required|string',
-        'status' => 'required|in:open,in-progress,resolved,closed',
         'priority' => 'required|in:low,medium,high,urgent',
         'category_id' => 'required|integer',
         'assigned_to' => 'nullable|integer'
@@ -99,9 +98,10 @@ Route::post('/tickets', function (Request $request) {
     $id = DB::table('tickets')->insertGetId([
         'title' => $request->title,
         'description' => $request->description,
-        'status' => $request->status,
+        'status' => 'open',
         'priority' => $request->priority,
         'category_id' => $request->category_id,
+        'user_id' => 1, // Default user for now (should be authenticated user)
         'assigned_to' => $request->assigned_to,
         'archived' => 0,
         'created_at' => now(),
