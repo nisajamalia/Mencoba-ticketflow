@@ -1,0 +1,59 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, development ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, json, sqlite3
+        coverage: none
+
+    - name: Copy .env
+      run: |
+        cd backend
+        cp .env.example .env
+        echo "DB_CONNECTION=sqlite" >> .env
+        echo "DB_DATABASE=:memory:" >> .env
+
+    - name: Install Dependencies
+      run: |
+        cd backend
+        composer install --no-interaction --prefer-dist --optimize-autoloader
+
+    - name: Generate Application Key
+      run: |
+        cd backend
+        php artisan key:generate
+
+    - name: Run Migrations
+      run: |
+        cd backend
+        touch database/database.sqlite
+        php artisan migrate --force
+
+    - name: Check Code Style
+      run: |
+        cd backend
+        ./vendor/bin/pint --test
+
+    - name: Run Tests
+      run: |
+        cd backend
+        php artisan test
