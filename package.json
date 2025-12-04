@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "mysql2": "^3.6.5"
+    "mysql2": "^3.6.5",
+    "vercel": "^48.12.1"
   },
   "scripts": {
     "dev": "cd frontend && npm run dev",
