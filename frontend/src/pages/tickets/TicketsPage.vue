@@ -526,8 +526,10 @@ export default {
       if (confirm(`Are you sure you want to archive ticket #${ticketId}?`)) {
         try {
           await ticketStore.updateTicket(ticketId, { archived: true });
+          // Remove from current list immediately
+          ticketStore.tickets = ticketStore.tickets.filter(t => t.id !== ticketId);
           alert("Ticket archived successfully!");
-          loadTickets();
+          await loadTickets();
         } catch (error) {
           console.error("Archive failed:", error);
           alert("Failed to archive ticket");
