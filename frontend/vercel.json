@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "ticket-flow-backend-production-9e38.up.railway.app"
+    }
+  ]
+}
