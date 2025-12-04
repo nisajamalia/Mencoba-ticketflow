@@ -299,15 +299,17 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useTicketStore } from "@/stores/tickets";
+import { useRoute } from "vue-router";
 
 export default {
   name: "DashboardPage",
   setup() {
     const authStore = useAuthStore();
     const ticketStore = useTicketStore();
+    const route = useRoute();
     const stats = ref(null);
 
     const recentTickets = computed(() => ticketStore.tickets.slice(0, 5));
@@ -364,11 +366,19 @@ export default {
       fetchData();
     });
 
+    // Watch for route changes to refresh data when navigating back to dashboard
+    watch(() => route.path, (newPath) => {
+      if (newPath === '/dashboard') {
+        fetchData();
+      }
+    });
+
     return {
       authStore,
       ticketStore,
       stats,
       recentTickets,
+      fetchData,
       getStatusBadgeClass,
       getPriorityBadgeClass,
       formatStatus,
