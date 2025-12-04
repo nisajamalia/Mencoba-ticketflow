@@ -129,18 +129,25 @@ Route::put('/tickets/{id}', function (Request $request, $id) {
     $request->validate([
         'title' => 'sometimes|required|string|max:255',
         'description' => 'sometimes|required|string',
-        'status' => 'sometimes|required|in:open,in-progress,resolved,closed',
+        'status' => 'sometimes|required|in:open,in_progress,resolved,closed',
         'priority' => 'sometimes|required|in:low,medium,high,urgent',
         'category_id' => 'sometimes|required|integer',
-        'assigned_to' => 'nullable|integer'
+        'assigned_to' => 'nullable|integer',
+        'archived' => 'sometimes|boolean'
     ]);
+
+    $updateData = $request->only(['title', 'description', 'status', 'priority', 'category_id', 'assigned_to']);
+    
+    // Handle archived field
+    if ($request->has('archived')) {
+        $updateData['archived'] = $request->archived ? 1 : 0;
+    }
+    
+    $updateData['updated_at'] = now();
 
     $affected = DB::table('tickets')
         ->where('id', $id)
-        ->update(array_merge(
-            $request->only(['title', 'description', 'status', 'priority', 'category_id', 'assigned_to']),
-            ['updated_at' => now()]
-        ));
+        ->update($updateData);
 
     if ($affected === 0) {
         return response()->json(['success' => false, 'message' => 'Ticket not found'], 404);

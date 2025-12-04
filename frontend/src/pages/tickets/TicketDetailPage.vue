@@ -310,12 +310,20 @@ export default {
       newComment.value = "";
     };
 
-    const updateStatus = () => {
-      // Mock status update
+    const updateStatus = async () => {
       const statuses = ["open", "in_progress", "resolved", "closed"];
       const currentIndex = statuses.indexOf(ticket.value.status);
       const nextIndex = (currentIndex + 1) % statuses.length;
-      ticket.value.status = statuses[nextIndex];
+      const newStatus = statuses[nextIndex];
+
+      try {
+        await ticketStore.updateTicket(route.params.id, { status: newStatus });
+        ticket.value.status = newStatus;
+        alert(`Ticket status updated to: ${newStatus.replace('_', ' ')}`);
+      } catch (error) {
+        console.error("Failed to update status:", error);
+        alert("Failed to update ticket status");
+      }
     };
 
     const getStatusClass = (status) => {
