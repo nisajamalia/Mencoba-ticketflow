@@ -21,6 +21,7 @@ return [
 
     'allowed_origins' => [
         'https://mencoba-ticketflow.vercel.app',
+        'https://mencoba-ticketflow-production.up.railway.app',
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:3000',
