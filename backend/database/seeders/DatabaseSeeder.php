@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -11,10 +12,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            UserSeeder::class,
-            CategorySeeder::class,
-            TicketSeeder::class,
-        ]);
+        // Only seed if database is empty
+        if (User::count() === 0) {
+            $this->call([
+                UserSeeder::class,
+                CategorySeeder::class,
+                TicketSeeder::class,
+            ]);
+            
+            $this->command->info('Database seeded successfully!');
+        } else {
+            $this->command->info('Database already contains data. Skipping seeding.');
+        }
     }
 }
