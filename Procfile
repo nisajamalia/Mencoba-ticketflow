@@ -1,1 +1,1 @@
-web: php artisan config:cache && (php artisan migrate --force || true) && (php artisan db:seed --force || true) && php artisan serve --host=0.0.0.0 --port=$PORT
+web: php artisan config:cache --no-interaction && (php artisan migrate --force --no-interaction || true) && (php artisan db:seed --force --no-interaction || true) && php artisan serve --host=0.0.0.0 --port=$PORT
